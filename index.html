@@ -183,6 +183,10 @@
     const highScoreText = document.getElementById('highScoreText');
     const levelText = document.getElementById('levelText');
 
+    // Opsi Opsional: Jika Anda punya gambar file orang sendiri (misal: player.png), baris ini akan menggunakannya.
+    const playerImg = new Image();
+    playerImg.src = 'player.png';
+
     // --- SYSTEM AUDIO (Web Audio API) ---
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     let audioCtx = null;
@@ -260,9 +264,9 @@
     // Pemain
     const player = {
       x: 100,
-      y: groundY - 50,
-      width: 30,
-      height: 50,
+      y: groundY - 55,
+      width: 32,
+      height: 55,
       vy: 0,
       gravity: 0.7,
       jumpForce: -13.5,
@@ -363,7 +367,7 @@
         player.isGrounded = true;
       }
 
-      player.runFrame += 0.2;
+      player.runFrame += 0.25;
 
       spawnTimer++;
       const currentInterval = Math.max(45, minSpawnInterval - (level * 5));
@@ -471,7 +475,7 @@
         ctx.fillRect(f.x - 4, groundY - 4, f.width + 8, 4);
       });
 
-      // Runner
+      // Runner (Pelari)
       drawRunner(player.x, player.y, player.width, player.height);
 
       // Partikel
@@ -499,41 +503,106 @@
       }
     }
 
+    // FUNGSI MENGGAMBAR KARAKTER ORANG DETAILE
     function drawRunner(x, y, w, h) {
       const cx = x + w / 2;
 
-      ctx.fillStyle = 'rgba(0,0,0,0.2)';
+      // 1. Bayangan Karakter
+      ctx.fillStyle = 'rgba(0,0,0,0.25)';
       ctx.beginPath();
       ctx.ellipse(cx, groundY - 2, 16, 5, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.fillStyle = '#38bdf8';
-      ctx.beginPath();
-      ctx.arc(cx, y + 10, 8, 0, Math.PI * 2);
-      ctx.fill();
+      // Jika file 'player.png' dipasang dan berhasil dimuat, gambar file tersebut
+      if (playerImg.complete && playerImg.naturalWidth !== 0) {
+        ctx.drawImage(playerImg, x, y, w, h);
+        return;
+      }
 
-      ctx.strokeStyle = '#38bdf8';
+      // --- PENGGAMBARAN KARAKTER MANUSIA (PELARI) ---
+      const isJumping = !player.isGrounded;
+      const legAngle = isJumping ? 0.7 : Math.sin(player.runFrame) * 0.7;
+      const armAngle = isJumping ? -0.7 : Math.cos(player.runFrame) * 0.7;
+
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      // 2. Kaki Belakang
+      ctx.strokeStyle = '#f87171'; // Kaki
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(cx, y + 34);
+      const backFootX = cx - Math.sin(legAngle) * 14;
+      const backFootY = y + 52;
+      ctx.lineTo(backFootX, backFootY);
+      ctx.stroke();
+
+      // Sepatu Belakang
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(backFootX - 4, backFootY - 2, 8, 4);
+
+      // 3. Tangan Belakang
+      ctx.strokeStyle = '#fbcfe8';
       ctx.lineWidth = 4;
       ctx.beginPath();
       ctx.moveTo(cx, y + 18);
-      ctx.lineTo(cx, y + 34);
+      ctx.lineTo(cx - Math.sin(armAngle) * 12, y + 28);
       ctx.stroke();
 
-      const isJumping = !player.isGrounded;
-      const legAngle = isJumping ? 0.8 : Math.sin(player.runFrame) * 0.6;
+      // 4. Celana Olahraga
+      ctx.fillStyle = '#1e3a8a';
+      ctx.fillRect(cx - 7, y + 28, 14, 10);
 
+      // 5. Baju / Kaos Olahraga
+      ctx.fillStyle = '#0284c7';
+      ctx.fillRect(cx - 8, y + 15, 16, 14);
+
+      // Nombor Dada / Strip Baju
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(cx - 5, y + 19, 10, 6);
+
+      // 6. Kaki Depan
+      ctx.strokeStyle = '#f87171';
+      ctx.lineWidth = 5;
       ctx.beginPath();
-      ctx.moveTo(cx, y + 22);
-      ctx.lineTo(cx - Math.sin(legAngle) * 12, y + 28);
-      ctx.moveTo(cx, y + 22);
-      ctx.lineTo(cx + Math.sin(legAngle) * 12, y + 28);
+      ctx.moveTo(cx, y + 34);
+      const frontFootX = cx + Math.sin(legAngle) * 14;
+      const frontFootY = y + 52;
+      ctx.lineTo(frontFootX, frontFootY);
       ctx.stroke();
 
+      // Sepatu Depan
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(frontFootX - 4, frontFootY - 2, 8, 4);
+
+      // 7. Kepala & Wajah
+      ctx.fillStyle = '#fbcfe8'; // Warna Kulit
       ctx.beginPath();
-      ctx.moveTo(cx, y + 34);
-      ctx.lineTo(cx + Math.sin(legAngle) * 14, y + 48);
-      ctx.moveTo(cx, y + 34);
-      ctx.lineTo(cx - Math.sin(legAngle) * 14, y + 48);
+      ctx.arc(cx, y + 8, 8, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Rambut
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.arc(cx, y + 6, 8.5, Math.PI * 0.8, Math.PI * 2.2);
+      ctx.fill();
+
+      // Ikat Kepala (Headband)
+      ctx.fillStyle = '#ef4444';
+      ctx.fillRect(cx - 8, y + 4, 16, 3);
+
+      // Mata
+      ctx.fillStyle = '#000000';
+      ctx.beginPath();
+      ctx.arc(cx + 3, y + 8, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 8. Tangan Depan
+      ctx.strokeStyle = '#fbcfe8';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(cx, y + 18);
+      ctx.lineTo(cx + Math.sin(armAngle) * 12, y + 28);
       ctx.stroke();
     }
 
