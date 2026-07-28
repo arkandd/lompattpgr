@@ -25,7 +25,7 @@
       position: relative;
     }
 
-    /* --- KOTAK LOGO POJOK KIRI ATAS (5 KOLOM) --- */
+    /* KOTAK LOGO POJOK KIRI ATAS */
     .logo-corner {
       position: absolute;
       top: 20px;
@@ -58,7 +58,6 @@
       object-fit: cover;
     }
 
-    /* Penyesuaian untuk layar HP agar tidak menutupi judul */
     @media (max-width: 900px) {
       .logo-corner {
         position: static;
@@ -104,7 +103,7 @@
     .score-item strong.gold { color: #f59e0b; }
     .score-item strong.green { color: #4ade80; }
 
-    /* Container Canvas Game */
+    /* Canvas Container */
     .game-container {
       position: relative;
       border-radius: 16px;
@@ -138,7 +137,7 @@
 </head>
 <body>
 
-  <!-- 5 KOLOM LOGO POJOK KIRI ATAS -->
+  <!-- 5 LOGO POJOK KIRI ATAS -->
   <div class="logo-corner">
     <div class="logo-box"><img src="l2.jpeg" alt="Logo 1"></div>
     <div class="logo-box"><img src="l3.jpeg" alt="Logo 2"></div>
@@ -149,7 +148,6 @@
 
   <h1>Lompat Pagar 🏃‍♂️🚧</h1>
 
-  <!-- Papan Skor & Level -->
   <div class="scoreboard">
     <div class="score-item">
       <span>Skor</span>
@@ -165,29 +163,23 @@
     </div>
   </div>
 
-  <!-- Area Permainan Canvas -->
   <div class="game-container">
     <canvas id="gameCanvas" width="800" height="400"></canvas>
   </div>
 
   <div class="instructions">
-    <b>Cara Bermain:</b> Tekan <kbd>SPASI</kbd> / <kbd>Panah Atas</kbd> atau <b>Klik/Tap Layar</b> untuk melompat melompati pagar 🚧.
+    <b>Cara Bermain:</b> Tekan <kbd>SPASI</kbd> / <kbd>Panah Atas</kbd> atau <b>Klik/Tap Layar</b> untuk melompat.
   </div>
 
   <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
-    // Elemen Skor DOM
     const scoreText = document.getElementById('scoreText');
     const highScoreText = document.getElementById('highScoreText');
     const levelText = document.getElementById('levelText');
 
-    // Opsi Opsional: Jika Anda punya gambar file orang sendiri (misal: player.png), baris ini akan menggunakannya.
-    const playerImg = new Image();
-    playerImg.src = 'player.png';
-
-    // --- SYSTEM AUDIO (Web Audio API) ---
+    // AUDIO SYSTEM
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     let audioCtx = null;
 
@@ -198,7 +190,6 @@
 
     function playSound(type) {
       if (!audioCtx) return;
-
       const osc = audioCtx.createOscillator();
       const gainNode = audioCtx.createGain();
       osc.connect(gainNode);
@@ -213,8 +204,7 @@
         gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
         osc.start(now);
         osc.stop(now + 0.15);
-      } 
-      else if (type === 'score') {
+      } else if (type === 'score') {
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(523.25, now);
         osc.frequency.setValueAtTime(659.25, now + 0.08);
@@ -222,25 +212,7 @@
         gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
         osc.start(now);
         osc.stop(now + 0.2);
-      }
-      else if (type === 'levelup') {
-        const notes = [440, 554.37, 659.25, 880];
-        notes.forEach((freq, idx) => {
-          const noteOsc = audioCtx.createOscillator();
-          const noteGain = audioCtx.createGain();
-          noteOsc.connect(noteGain);
-          noteOsc.connect(audioCtx.destination);
-          
-          noteOsc.type = 'sine';
-          noteOsc.frequency.setValueAtTime(freq, now + idx * 0.1);
-          noteGain.gain.setValueAtTime(0.2, now + idx * 0.1);
-          noteGain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.1 + 0.2);
-          
-          noteOsc.start(now + idx * 0.1);
-          noteOsc.stop(now + idx * 0.1 + 0.2);
-        });
-      }
-      else if (type === 'hit') {
+      } else if (type === 'hit') {
         osc.type = 'sawtooth';
         osc.frequency.setValueAtTime(220, now);
         osc.frequency.exponentialRampToValueAtTime(40, now + 0.4);
@@ -251,7 +223,7 @@
       }
     }
 
-    // --- GAME VARIABLES ---
+    // GAME VARIABLES
     let gameState = 'START';
     let score = 0;
     let highScore = localStorage.getItem('hurdle_highscore') || 0;
@@ -274,19 +246,13 @@
       runFrame: 0
     };
 
-    // Obstacles (Pagar)
     let fences = [];
     let spawnTimer = 0;
-    let minSpawnInterval = 90;
-
-    // Partikel
     let particles = [];
     let floatingTexts = [];
 
-    // --- KONTROL / EVENT LISTENER ---
     function triggerJump() {
       initAudio();
-
       if (gameState === 'START' || gameState === 'GAMEOVER') {
         resetGame();
         gameState = 'PLAYING';
@@ -318,7 +284,6 @@
       triggerJump();
     }, { passive: false });
 
-    // --- GAME LOGIC ---
     function resetGame() {
       score = 0;
       level = 1;
@@ -329,7 +294,6 @@
       player.y = groundY - player.height;
       player.vy = 0;
       player.isGrounded = true;
-      
       scoreText.textContent = score;
       levelText.textContent = level;
     }
@@ -337,8 +301,7 @@
     function createParticles(x, y, color, count) {
       for (let i = 0; i < count; i++) {
         particles.push({
-          x: x,
-          y: y,
+          x: x, y: y,
           vx: (Math.random() - 0.5) * 4,
           vy: (Math.random() - 1) * 3,
           size: Math.random() * 4 + 2,
@@ -346,10 +309,6 @@
           alpha: 1
         });
       }
-    }
-
-    function addFloatingText(text, x, y, color = '#f59e0b') {
-      floatingTexts.push({ text, x, y, alpha: 1, color });
     }
 
     function update() {
@@ -369,17 +328,16 @@
 
       player.runFrame += 0.25;
 
+      // Spawning pagar
       spawnTimer++;
-      const currentInterval = Math.max(45, minSpawnInterval - (level * 5));
+      const currentInterval = Math.max(45, 90 - (level * 5));
       if (spawnTimer > currentInterval + Math.random() * 30) {
         spawnTimer = 0;
-
         const h = 35 + Math.random() * 20;
-        const w = 20 + Math.random() * 10;
         fences.push({
           x: canvas.width + 20,
           y: groundY - h,
-          width: w,
+          width: 24,
           height: h,
           passed: false
         });
@@ -394,14 +352,11 @@
           score += 10;
           scoreText.textContent = score;
           playSound('score');
-          addFloatingText('+10', player.x, player.y - 10);
 
           if (score % 50 === 0) {
             level++;
             gameSpeed += 0.8;
             levelText.textContent = level;
-            playSound('levelup');
-            addFloatingText(`LEVEL ${level}! 🚀`, canvas.width / 2, 100, '#38bdf8');
           }
 
           if (score > highScore) {
@@ -411,6 +366,7 @@
           }
         }
 
+        // Tabrakan
         const hitMargin = 4;
         if (
           player.x + hitMargin < f.x + f.width &&
@@ -423,9 +379,7 @@
           gameState = 'GAMEOVER';
         }
 
-        if (f.x + f.width < -50) {
-          fences.splice(i, 1);
-        }
+        if (f.x + f.width < -50) fences.splice(i, 1);
       }
 
       for (let i = particles.length - 1; i >= 0; i--) {
@@ -435,29 +389,20 @@
         p.alpha -= 0.03;
         if (p.alpha <= 0) particles.splice(i, 1);
       }
-
-      for (let i = floatingTexts.length - 1; i >= 0; i--) {
-        let ft = floatingTexts[i];
-        ft.y -= 1;
-        ft.alpha -= 0.02;
-        if (ft.alpha <= 0) floatingTexts.splice(i, 1);
-      }
     }
 
-    // --- DRAWING / VISUAL ---
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Background / Bulan
+      // Bulan
       ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
       ctx.beginPath();
       ctx.arc(700, 80, 40, 0, Math.PI * 2);
       ctx.fill();
 
-      // Lapangan
+      // Rumput & Garis Lapangan
       ctx.fillStyle = '#15803d';
       ctx.fillRect(0, groundY, canvas.width, canvas.height - groundY);
-
       ctx.fillStyle = '#ca8a04';
       ctx.fillRect(0, groundY, canvas.width, 8);
 
@@ -465,17 +410,13 @@
       fences.forEach(f => {
         ctx.fillStyle = '#b45309';
         ctx.fillRect(f.x, f.y, f.width, f.height);
-
         ctx.fillStyle = '#f8fafc';
         ctx.fillRect(f.x - 2, f.y + 4, f.width + 4, 6);
         ctx.fillStyle = '#ef4444';
         ctx.fillRect(f.x - 2, f.y + 16, f.width + 4, 6);
-
-        ctx.fillStyle = '#78350f';
-        ctx.fillRect(f.x - 4, groundY - 4, f.width + 8, 4);
       });
 
-      // Runner (Pelari)
+      // GAMBAR KARAKTER PELARI
       drawRunner(player.x, player.y, player.width, player.height);
 
       // Partikel
@@ -488,38 +429,22 @@
         ctx.globalAlpha = 1.0;
       });
 
-      // Teks Melayang
-      floatingTexts.forEach(ft => {
-        ctx.fillStyle = ft.color;
-        ctx.globalAlpha = Math.max(0, ft.alpha);
-        ctx.font = 'bold 20px Segoe UI';
-        ctx.textAlign = 'center';
-        ctx.fillText(ft.text, ft.x, ft.y);
-        ctx.globalAlpha = 1.0;
-      });
-
+      // Tampilan Menu Start / Game Over
       if (gameState === 'START' || gameState === 'GAMEOVER') {
         drawOverlay();
       }
     }
 
-    // FUNGSI MENGGAMBAR KARAKTER ORANG DETAILE
+    // FUNGSI KHUSUS MENGGAMBAR MANUSIA PELARI
     function drawRunner(x, y, w, h) {
       const cx = x + w / 2;
 
-      // 1. Bayangan Karakter
-      ctx.fillStyle = 'rgba(0,0,0,0.25)';
+      // Bayangan
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
       ctx.beginPath();
       ctx.ellipse(cx, groundY - 2, 16, 5, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Jika file 'player.png' dipasang dan berhasil dimuat, gambar file tersebut
-      if (playerImg.complete && playerImg.naturalWidth !== 0) {
-        ctx.drawImage(playerImg, x, y, w, h);
-        return;
-      }
-
-      // --- PENGGAMBARAN KARAKTER MANUSIA (PELARI) ---
       const isJumping = !player.isGrounded;
       const legAngle = isJumping ? 0.7 : Math.sin(player.runFrame) * 0.7;
       const armAngle = isJumping ? -0.7 : Math.cos(player.runFrame) * 0.7;
@@ -527,8 +452,8 @@
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
 
-      // 2. Kaki Belakang
-      ctx.strokeStyle = '#f87171'; // Kaki
+      // 1. Kaki Belakang
+      ctx.strokeStyle = '#f87171';
       ctx.lineWidth = 5;
       ctx.beginPath();
       ctx.moveTo(cx, y + 34);
@@ -541,7 +466,7 @@
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(backFootX - 4, backFootY - 2, 8, 4);
 
-      // 3. Tangan Belakang
+      // 2. Tangan Belakang
       ctx.strokeStyle = '#fbcfe8';
       ctx.lineWidth = 4;
       ctx.beginPath();
@@ -549,19 +474,19 @@
       ctx.lineTo(cx - Math.sin(armAngle) * 12, y + 28);
       ctx.stroke();
 
-      // 4. Celana Olahraga
+      // 3. Celana
       ctx.fillStyle = '#1e3a8a';
       ctx.fillRect(cx - 7, y + 28, 14, 10);
 
-      // 5. Baju / Kaos Olahraga
+      // 4. Baju
       ctx.fillStyle = '#0284c7';
       ctx.fillRect(cx - 8, y + 15, 16, 14);
 
-      // Nombor Dada / Strip Baju
+      // Strip Baju
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(cx - 5, y + 19, 10, 6);
 
-      // 6. Kaki Depan
+      // 5. Kaki Depan
       ctx.strokeStyle = '#f87171';
       ctx.lineWidth = 5;
       ctx.beginPath();
@@ -575,8 +500,8 @@
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(frontFootX - 4, frontFootY - 2, 8, 4);
 
-      // 7. Kepala & Wajah
-      ctx.fillStyle = '#fbcfe8'; // Warna Kulit
+      // 6. Kepala
+      ctx.fillStyle = '#fbcfe8';
       ctx.beginPath();
       ctx.arc(cx, y + 8, 8, 0, Math.PI * 2);
       ctx.fill();
@@ -587,7 +512,7 @@
       ctx.arc(cx, y + 6, 8.5, Math.PI * 0.8, Math.PI * 2.2);
       ctx.fill();
 
-      // Ikat Kepala (Headband)
+      // Headband Merah
       ctx.fillStyle = '#ef4444';
       ctx.fillRect(cx - 8, y + 4, 16, 3);
 
@@ -597,7 +522,7 @@
       ctx.arc(cx + 3, y + 8, 1.5, 0, Math.PI * 2);
       ctx.fill();
 
-      // 8. Tangan Depan
+      // 7. Tangan Depan
       ctx.strokeStyle = '#fbcfe8';
       ctx.lineWidth = 4;
       ctx.beginPath();
@@ -607,31 +532,36 @@
     }
 
     function drawOverlay() {
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // Box Dialog Transparan di Tengah
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
+      ctx.roundRect(canvas.width / 2 - 200, canvas.height / 2 - 80, 400, 140, 16);
+      ctx.fill();
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2;
+      ctx.stroke();
 
       ctx.textAlign = 'center';
 
       if (gameState === 'START') {
         ctx.fillStyle = '#38bdf8';
-        ctx.font = 'bold 32px Segoe UI';
-        ctx.fillText('LOMPAT PAGAR 🏃‍♂️🚧', canvas.width / 2, canvas.height / 2 - 30);
+        ctx.font = 'bold 26px Segoe UI';
+        ctx.fillText('SIAP BERMAIN?', canvas.width / 2, canvas.height / 2 - 30);
 
         ctx.fillStyle = '#f8fafc';
-        ctx.font = '18px Segoe UI';
-        ctx.fillText('Klik / Tekan SPASI untuk Memulai!', canvas.width / 2, canvas.height / 2 + 20);
+        ctx.font = '16px Segoe UI';
+        ctx.fillText('Klik / Tekan SPASI untuk Mulai', canvas.width / 2, canvas.height / 2 + 15);
       } else if (gameState === 'GAMEOVER') {
         ctx.fillStyle = '#ef4444';
-        ctx.font = 'bold 36px Segoe UI';
-        ctx.fillText('GAME OVER! 💥', canvas.width / 2, canvas.height / 2 - 40);
+        ctx.font = 'bold 28px Segoe UI';
+        ctx.fillText('GAME OVER!', canvas.width / 2, canvas.height / 2 - 35);
 
         ctx.fillStyle = '#f8fafc';
-        ctx.font = '20px Segoe UI';
+        ctx.font = '16px Segoe UI';
         ctx.fillText(`Skor Akhir: ${score} | Level: ${level}`, canvas.width / 2, canvas.height / 2 + 5);
 
         ctx.fillStyle = '#38bdf8';
-        ctx.font = '16px Segoe UI';
-        ctx.fillText('Klik / Tekan SPASI untuk Main Lagi', canvas.width / 2, canvas.height / 2 + 55);
+        ctx.font = '14px Segoe UI';
+        ctx.fillText('Klik / Tekan SPASI untuk Ulangi', canvas.width / 2, canvas.height / 2 + 35);
       }
     }
 
